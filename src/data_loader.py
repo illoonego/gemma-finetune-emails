@@ -19,6 +19,9 @@ def load_training_dataset(split="train", max_length=128):
     # Load tokenizer
     tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL, trust_remote_code=True)
 
+    # Patch pad_token to prevent padding error
+    tokenizer.pad_token = tokenizer.eos_token
+
     # Preprocessing function
     def preprocess(batch):
         prompt = [
