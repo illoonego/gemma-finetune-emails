@@ -14,3 +14,8 @@ dummy_emails = [
     "This is a gentle reminder to submit your feedback.",
     "Thank you for your email. I will get back to you shortly.",
 ]
+
+# Class labels for the dataset
+LABELS = ["Request", "Informational", "Transaction", "Feedback"]
+LABEL2ID = {label: i for i, label in enumerate(LABELS)}
+ID2LABEL = {i: label for label, i in LABEL2ID.items()}
