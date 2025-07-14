@@ -1,10 +1,9 @@
 import transformers
-
-transformers.logging.set_verbosity_error()  # Suppress Hugging Face model warnings
+transformers.logging.set_verbosity_error() # Suppress HF warnings
 
 import time
-from tqdm import tqdm  # Progress bar for batch inference
-from src.config import BASE_MODEL, MAX_NEW_TOKENS
+from tqdm import tqdm
+from src.config import BASE_MODEL, MAX_TOKENS
 from src.model_loader import load_model_and_tokenizer
 from src.data_loader import load_sample_inputs
 from src.evaluate import run_inference
@@ -12,7 +11,7 @@ from src.evaluate import run_inference
 
 def main():
     try:
-        # Load model and tokenizer (e.g., LLaMA 3 7B)
+        # Load model and tokenizer (e.g., Gemma 2B)
         model, tokenizer = load_model_and_tokenizer(BASE_MODEL)
     except Exception as e:
         print(f"[ERROR] Failed to load model or tokenizer: {e}")
@@ -32,7 +31,7 @@ def main():
         start_time = time.time()
         try:
             response = run_inference(
-                model, tokenizer, email, max_new_tokens=MAX_NEW_TOKENS
+                model, tokenizer, email, max_new_tokens=MAX_TOKENS
             )
         except Exception as e:
             tqdm.write(f"[ERROR] Inference failed: {e}")
