@@ -1,6 +1,6 @@
 from datasets import load_dataset
 from transformers import AutoTokenizer
-from src.config import BASE_MODEL, LABEL2ID, dummy_emails
+from src.config import BASE_MODEL, LABEL2ID, MAX_TOKENS, dummy_emails
 
 
 def load_sample_inputs():
@@ -9,7 +9,7 @@ def load_sample_inputs():
     """
     return dummy_emails
 
-def load_training_dataset(split="train", max_length=128):
+def load_training_dataset(split="train", max_length=MAX_TOKENS):
     """
     Loads and tokenizes the elenigkove/Email_Intent_Classification dataset.
     """
@@ -17,7 +17,7 @@ def load_training_dataset(split="train", max_length=128):
     dataset = load_dataset("elenigkove/Email_Intent_Classification")
 
     # Load tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL, trust_remote_code=True)
+    tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL)
 
     # Patch pad_token to prevent padding error
     tokenizer.pad_token = tokenizer.eos_token
