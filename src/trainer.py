@@ -1,93 +1,108 @@
-import torch
-from transformers import TrainingArguments, Trainer, AutoTokenizer, DataCollatorForLanguageModeling
-from peft import LoraConfig, get_peft_model, TaskType, prepare_model_for_kbit_training
-from transformers import AutoModelForCausalLM
-from src.config import BASE_MODEL
-from src.data_loader import load_instruction_dataset
+"""
+Trainer for LoRA fine-tuning pipeline
+Handles the complete training process using the modular components
+"""
+from transformers import TrainingArguments, Trainer, DataCollatorForLanguageModeling
+from .config import TRAINING_CONFIG
+from .model_handler import ModelHandler
+from .data_handler import DataHandler
 
 
-def build_lora_model():
-    """
-    Loads the base model without GPU support and applies LoRA adapter.
-    Avoids meta tensor issues by disabling `device_map="auto"` and setting low memory usage.
-    """
-    print("[INFO] Loading base model for CPU-only environment...")
-
-    model = AutoModelForCausalLM.from_pretrained(
-        BASE_MODEL,
-        torch_dtype=torch.float32,
-        trust_remote_code=True,
-        device_map=None,             # ⚠️ Force full CPU loading
-        low_cpu_mem_usage=False,     # ⚠️ Don't offload to meta tensors
-    )
-
-    print("[INFO] Applying LoRA config...")
-    model = prepare_model_for_kbit_training(model)
-
-    lora_config = LoraConfig(
-        r=8,
-        lora_alpha=16,
-        target_modules=["q_proj", "v_proj"],
-        lora_dropout=0.05,
-        bias="none",
-        task_type=TaskType.CAUSAL_LM,
-    )
-
-    model = get_peft_model(model, lora_config)
-    model.print_trainable_parameters()
-
-    return model
-
-
-def fine_tune_lora():
-    """
-    Full instruction-tuning pipeline using Hugging Face Trainer + PEFT.
-    """
-    print("[INFO] Loading tokenizer...")
-    tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL, trust_remote_code=True)
-    tokenizer.pad_token = tokenizer.eos_token
-
-    print("[INFO] Loading datasets...")
-    train_dataset = load_instruction_dataset("train", tokenizer)
-    eval_dataset = load_instruction_dataset("test", tokenizer)
-
-    print("[INFO] Building LoRA model...")
-    model = build_lora_model()
-
-    print("[INFO] Preparing training arguments...")
-    args = TrainingArguments(
-        output_dir="outputs",
-        per_device_train_batch_size=1,
-        per_device_eval_batch_size=1,
-        eval_strategy="steps",
-        save_strategy="steps",
-        eval_steps=100,
-        save_steps=100,
-        logging_steps=50,
-        num_train_epochs=2,
-        learning_rate=2e-4,
-        fp16=False,
-        bf16=False,
-        save_total_limit=2,
-        load_best_model_at_end=True,
-        report_to="none",
-    )
-
-    print("[INFO] Preparing data collator...")
-    data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
-
-    trainer = Trainer(
-        model=model,
-        args=args,
-        train_dataset=train_dataset,
-        eval_dataset=eval_dataset,
-        tokenizer=tokenizer,
-        data_collator=data_collator,
-    )
-
-    print("[INFO] Starting training...")
-    trainer.train()
-    print("[INFO] Training complete!")
-
-    print("[INFO] Saving fine-tuned LoRA adapter...")
-    model.save_pretrained("outputs/lora_adapter")
+class LoRATrainer:
+    """Unified LoRA training pipeline"""
+    
+    def __init__(self):
+        self.model_handler = ModelHandler()
+        self.data_handler = DataHandler()
+    
+    def train(self, custom_config: dict = None) -> str:
+        """
+        Complete LoRA fine-tuning pipeline
+        Returns path to saved adapter
+        """
+        print("="*60)
+        print("STARTING LORA FINE-TUNING PIPELINE")
+        print("="*60)
+        
+        # 1. Load base model and tokenizer
+        print("\n[STEP 1] Loading base model and tokenizer...")
+        model, tokenizer = self.model_handler.load_base_model()
+        self.data_handler.set_tokenizer(tokenizer)
+        
+        # 2. Load and preprocess dataset
+        print("\n[STEP 2] Loading and preprocessing dataset...")
+        self.data_handler.load_dataset()
+        train_dataset = self.data_handler.preprocess_for_training("train")
+        eval_dataset = self.data_handler.preprocess_for_training("test")
+        
+        # 3. Prepare model for LoRA training
+        print("\n[STEP 3] Preparing model for LoRA training...")
+        model = self.model_handler.prepare_for_lora_training()
+        
+        # 4. Setup training configuration
+        print("\n[STEP 4] Setting up training configuration...")
+        config = {
+            'output_dir': TRAINING_CONFIG.output_dir,
+            'per_device_train_batch_size': TRAINING_CONFIG.batch_size,
+            'per_device_eval_batch_size': TRAINING_CONFIG.batch_size,
+            'eval_strategy': "steps",
+            'save_strategy': "steps",
+            'eval_steps': TRAINING_CONFIG.eval_steps,
+            'save_steps': TRAINING_CONFIG.save_steps,
+            'logging_steps': TRAINING_CONFIG.logging_steps,
+            'num_train_epochs': TRAINING_CONFIG.num_epochs,
+            'learning_rate': TRAINING_CONFIG.learning_rate,
+            'fp16': False,
+            'bf16': False,
+            'save_total_limit': 2,
+            'load_best_model_at_end': True,
+            'report_to': "none",
+        }
+        
+        # Apply custom configuration if provided
+        if custom_config:
+            config.update(custom_config)
+            print(f"[INFO] Applied custom configuration: {custom_config}")
+        
+        training_args = TrainingArguments(**config)
+        
+        # 5. Setup data collator
+        data_collator = DataCollatorForLanguageModeling(
+            tokenizer=tokenizer, 
+            mlm=False
+        )
+        
+        # 6. Initialize trainer
+        trainer = Trainer(
+            model=model,
+            args=training_args,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            tokenizer=tokenizer,
+            data_collator=data_collator,
+        )
+        
+        # 7. Start training
+        print("\n[STEP 5] Starting LoRA training...")
+        print("-" * 40)
+        
+        import time
+        start_time = time.time()
+        
+        trainer.train()
+        
+        training_time = time.time() - start_time
+        print("-" * 40)
+        print(f"[INFO] Training completed in {training_time:.2f} seconds")
+        
+        # 8. Save LoRA adapter
+        print("\n[STEP 6] Saving LoRA adapter...")
+        adapter_path = f"{TRAINING_CONFIG.output_dir}/{TRAINING_CONFIG.adapter_name}"
+        self.model_handler.save_lora_adapter(adapter_path)
+        
+        print("\n" + "="*60)
+        print("LORA FINE-TUNING COMPLETED SUCCESSFULLY!")
+        print(f"Adapter saved to: {adapter_path}")
+        print("="*60)
+        
+        return adapter_path
