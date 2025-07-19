@@ -1,6 +1,6 @@
 from datasets import load_dataset
 from transformers import AutoTokenizer
-from src.config import BASE_MODEL, MAX_TOKENS, dummy_emails
+from configs import BASE_MODEL, MAX_TOKENS, dummy_emails
 
 
 def load_sample_inputs():

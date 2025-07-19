@@ -23,6 +23,7 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+*.whl
 
 # Virtual environments
 .venv/
@@ -62,12 +63,5 @@ Thumbs.db
 # Ignore Hugging Face cache
 ~/.cache/huggingface/
 
-# Custom: ignore evaluation and test scripts
-evaluation_batch_inference.py
-evaluation_inference.py
-test_data_loader.py
-test_lora.py
-test_model_generation.py
-test_model_loader.py
-test_training_args.py
+# Training outputs
 outputs/
