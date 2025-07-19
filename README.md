@@ -16,7 +16,6 @@ A clean, modular pipeline for fine-tuning Google's Gemma 2B model using LoRA (Lo
 │   ├── trainer.py          # LoRA training pipeline
 │   └── data_loader.py      # Legacy data loading utilities
 ├── main.py                 # Single CLI entry point
-├── archive_testing/        # Archived test files
 ├── outputs/               # Training outputs (ignored by git)
 ├── requirements.txt       # Dependencies
 └── README.md             # This file
