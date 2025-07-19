@@ -5,3 +5,4 @@ peft>=0.10.0
 accelerate>=0.27.0
 tqdm
 peft==0.10.0
+bitsandbytes>=0.42.0

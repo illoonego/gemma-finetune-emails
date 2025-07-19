@@ -1,6 +1,6 @@
 from datasets import load_dataset
 from transformers import AutoTokenizer
-from src.config import BASE_MODEL, LABEL2ID, MAX_TOKENS, dummy_emails
+from src.config import BASE_MODEL, MAX_TOKENS, dummy_emails
 
 
 def load_sample_inputs():
@@ -9,30 +9,38 @@ def load_sample_inputs():
     """
     return dummy_emails
 
-def load_training_dataset(split="train", max_length=MAX_TOKENS):
-    """
-    Loads and tokenizes the elenigkove/Email_Intent_Classification dataset.
-    """
-    print("\n[INFO] Loading dataset: elenigkove/Email_Intent_Classification")
-    dataset = load_dataset("elenigkove/Email_Intent_Classification")
 
-    # Load tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL)
+def load_instruction_dataset(split="train", tokenizer=None, max_length=MAX_TOKENS):
+    """
+    Loads and formats the dataset in instruction-response format.
+    Output is a single sequence: <|user|> prompt <|eot_id|> <|assistant|> response <|eot_id|>
+    Labels = input_ids.
+    """
+    print(f"\n[INFO] Loading dataset: elenigkove/Email_Intent_Classification ({split})")
+    dataset = load_dataset("elenigkove/Email_Intent_Classification")[split]
 
-    # Patch pad_token to prevent padding error
+    if tokenizer is None:
+        tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL, trust_remote_code=True)
     tokenizer.pad_token = tokenizer.eos_token
 
-    # Preprocessing function
-    def preprocess(batch):
-        prompt = [
-            f"Classify the intent of this email using one of the following labels: {', '.join(LABEL2ID.keys())}.\n\nEmail:\n{email}"
-            for email in batch["Email"]
-        ]
-        tokens = tokenizer(prompt, padding="max_length", truncation=True, max_length=max_length)
-        tokens["labels"] = [LABEL2ID[label] for label in batch["Intent"]]
-        return tokens
+    def format_example(example):
+        prompt = (
+            "<|user|>\n"
+            f"Classify the intent of the following email:\n\n{example['Email']}\n\nIntent:"
+            "<|eot_id|>\n<|assistant|>\n"
+            f"{example['Intent']}<|eot_id|>"
+        )
 
-    tokenized_dataset = dataset.map(preprocess, batched=True, remove_columns=["Email", "Intent"])
+        tokenized = tokenizer(
+            prompt,
+            truncation=True,
+            padding="max_length",
+            max_length=max_length,
+        )
 
+        tokenized["labels"] = tokenized["input_ids"].copy()
+        return tokenized
+
+    processed = dataset.map(format_example, remove_columns=["Email", "Intent"])
     print("[INFO] Dataset loaded and tokenized.")
-    return tokenized_dataset[split]
+    return processed

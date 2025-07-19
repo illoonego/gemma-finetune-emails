@@ -1,42 +1,33 @@
 import torch
-from transformers import TrainingArguments, Trainer, DataCollatorWithPadding
+from transformers import TrainingArguments, Trainer, AutoTokenizer, DataCollatorForLanguageModeling
 from peft import LoraConfig, get_peft_model, TaskType, prepare_model_for_kbit_training
-from transformers import AutoModelForCausalLM, BitsAndBytesConfig
+from transformers import AutoModelForCausalLM
+from src.config import BASE_MODEL
+from src.data_loader import load_instruction_dataset
 
-from src.config import BASE_MODEL, LABEL2ID
-from src.data_loader import load_training_dataset
 
 def build_lora_model():
     """
-    Loads the base model with 4-bit quantization and applies LoRA adapter.
-    Works on CPU (Apple Silicon compatible), but slower.
+    Loads the base model without GPU support and applies LoRA adapter.
+    Avoids meta tensor issues by disabling `device_map="auto"` and setting low memory usage.
     """
-    print("[INFO] Loading base model with 4-bit quantization...")
+    print("[INFO] Loading base model for CPU-only environment...")
 
-    # Define quantization config (4-bit mode)
-    bnb_config = BitsAndBytesConfig(
-        load_in_4bit=True,  # Load weights in 4-bit
-        bnb_4bit_compute_dtype=torch.float32, # Use float32 for computation
-        bnb_4bit_use_double_quant=True,
-        bnb_4bit_quant_type="nf4",  # Non-uniform quantization
-    )
-
-    # Load model with quantization config
     model = AutoModelForCausalLM.from_pretrained(
         BASE_MODEL,
-        quantization_config=bnb_config,
-        device_map="auto",  # Use CPU on Mac
+        torch_dtype=torch.float32,
         trust_remote_code=True,
+        device_map=None,             # ⚠️ Force full CPU loading
+        low_cpu_mem_usage=False,     # ⚠️ Don't offload to meta tensors
     )
 
-    # Prepare for LoRA
     print("[INFO] Applying LoRA config...")
     model = prepare_model_for_kbit_training(model)
 
     lora_config = LoraConfig(
         r=8,
         lora_alpha=16,
-        target_modules=["q_proj", "v_proj"],  # Adjust if needed
+        target_modules=["q_proj", "v_proj"],
         lora_dropout=0.05,
         bias="none",
         task_type=TaskType.CAUSAL_LM,
@@ -47,19 +38,18 @@ def build_lora_model():
 
     return model
 
+
 def fine_tune_lora():
     """
-    Full training pipeline using Hugging Face Trainer + PEFT on 4-bit model.
+    Full instruction-tuning pipeline using Hugging Face Trainer + PEFT.
     """
-    from transformers import AutoTokenizer, TrainingArguments, Trainer, DataCollatorWithPadding
-
     print("[INFO] Loading tokenizer...")
     tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL, trust_remote_code=True)
     tokenizer.pad_token = tokenizer.eos_token
 
     print("[INFO] Loading datasets...")
-    train_dataset = load_training_dataset("train")
-    eval_dataset = load_training_dataset("test")
+    train_dataset = load_instruction_dataset("train", tokenizer)
+    eval_dataset = load_instruction_dataset("test", tokenizer)
 
     print("[INFO] Building LoRA model...")
     model = build_lora_model()
@@ -67,7 +57,7 @@ def fine_tune_lora():
     print("[INFO] Preparing training arguments...")
     args = TrainingArguments(
         output_dir="outputs",
-        per_device_train_batch_size=1,      # small batch due to CPU and RAM
+        per_device_train_batch_size=1,
         per_device_eval_batch_size=1,
         eval_strategy="steps",
         save_strategy="steps",
@@ -76,15 +66,15 @@ def fine_tune_lora():
         logging_steps=50,
         num_train_epochs=2,
         learning_rate=2e-4,
-        fp16=False,                         # no GPU, use float32 on CPU
-        bf16=False,                         # also disable bf16 (just in case)
+        fp16=False,
+        bf16=False,
         save_total_limit=2,
         load_best_model_at_end=True,
         report_to="none",
     )
 
     print("[INFO] Preparing data collator...")
-    data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
+    data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
     trainer = Trainer(
         model=model,
