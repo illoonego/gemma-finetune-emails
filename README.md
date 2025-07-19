@@ -17,9 +17,80 @@ A clean, modular pipeline for fine-tuning Google's Gemma 2B model using LoRA (Lo
 │   └── data_loader.py      # Legacy data loading utilities
 ├── main.py                 # Single CLI entry point
 ├── outputs/               # Training outputs (ignored by git)
+├── setup.py               # Package installation and configuration
+├── LICENSE                # MIT License
 ├── requirements.txt       # Dependencies
 └── README.md             # This file
-```## 🚀 Quick Start### 1. Setup Environment```bash# Create virtual environmentpython3 -m venv .venvsource .venv/bin/activate  # On Windows: .venv\Scripts\activate# Install dependenciespip install -r requirements.txt```### 2. Run Complete Pipeline```bash# Run the full pipeline: info → base test → train → lora test → comparepython main.py full```### 3. Individual Commands```bash# Show configuration and dataset infopython main.py info# Test base model performancepython main.py base-test# Train LoRA adapterpython main.py train# Test trained LoRA modelpython main.py lora-test# Compare base vs LoRA modelpython main.py compare# Interactive testing with custom emailspython main.py interactive```## 🎛️ Advanced Usage### Custom Training Parameters```bash# Train with custom settingspython main.py train --epochs 5 --learning-rate 1e-4 --batch-size 2```### Using Different Adapter Path```bash# Test specific adapterpython main.py lora-test --adapter-path /path/to/my/adapter# Compare with specific adapterpython main.py compare --adapter-path outputs/my_custom_adapter```## 📊 Pipeline Workflow### 1. **Information Phase** (`python main.py info`)- Show model and dataset configuration- Display dataset statistics and sample examples- Verify environment setup### 2. **Base Model Testing** (`python main.py base-test`)- Load Google Gemma-2B base model
+```
+
+## 🚀 Quick Start
+
+### 1. Installation Options
+
+#### Option A: Install as Package (Recommended)
+```bash
+# Create virtual environment
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install the package in development mode
+pip install -e .
+
+# Now you can use the CLI command from anywhere
+gemma-finetune info
+```
+
+#### Option B: Development Setup
+```bash
+# Create virtual environment
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install dependencies only
+pip install -r requirements.txt
+
+# Run directly with Python
+python main.py info
+```
+
+#### Option C: Install from Source
+```bash
+# Clone and install
+git clone <repository-url>
+cd gemma-finetune-emails
+pip install .
+```
+
+### 2. Run Complete Pipeline
+
+```bash
+# Run the full pipeline: info → base test → train → lora test → compare
+python main.py full
+# OR if installed as package:
+gemma-finetune full
+```
+
+### 3. Individual Commands
+
+```bash
+# Show configuration and dataset info
+python main.py info
+
+# Test base model performance
+python main.py base-test
+
+# Train LoRA adapter
+python main.py train
+
+# Test trained LoRA model
+python main.py lora-test
+
+# Compare base vs LoRA model
+python main.py compare
+
+# Interactive testing with custom emails
+python main.py interactive
+```## 🎛️ Advanced Usage### Custom Training Parameters```bash# Train with custom settingspython main.py train --epochs 5 --learning-rate 1e-4 --batch-size 2```### Using Different Adapter Path```bash# Test specific adapterpython main.py lora-test --adapter-path /path/to/my/adapter# Compare with specific adapterpython main.py compare --adapter-path outputs/my_custom_adapter```## 📊 Pipeline Workflow### 1. **Information Phase** (`python main.py info`)- Show model and dataset configuration- Display dataset statistics and sample examples- Verify environment setup### 2. **Base Model Testing** (`python main.py base-test`)- Load Google Gemma-2B base model
 - Test on predefined email examples
 - Establish baseline performance
 
