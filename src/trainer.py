@@ -3,7 +3,7 @@ Trainer for LoRA fine-tuning pipeline
 Handles the complete training process using the modular components
 """
 from transformers import TrainingArguments, Trainer, DataCollatorForLanguageModeling
-from .config import TRAINING_CONFIG
+from configs import TRAINING_CONFIG
 from .model_handler import ModelHandler
 from .data_handler import DataHandler
 

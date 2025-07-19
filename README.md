@@ -1,4 +1,26 @@
-# LoRA Fine-tuning Pipeline for Email Intent ClassificationA clean, modular pipeline for fine-tuning Google's Gemma 2B model using LoRA (Low-Rank Adaptation) on email intent classification tasks.## 🏗️ Project Structure```├── src/│   ├── __init__.py         # Package initialization│   ├── config.py           # Centralized configuration│   ├── model_handler.py    # Model operations (load, LoRA, save)│   ├── data_handler.py     # Dataset operations (load, preprocess)│   ├── evaluator.py        # Evaluation and metrics│   └── trainer.py          # LoRA training pipeline├── main.py                 # Single CLI entry point├── archive_testing/        # Archived test files├── outputs/               # Training outputs (ignored by git)├── requirements.txt       # Dependencies└── README.md             # This file```## 🚀 Quick Start### 1. Setup Environment```bash# Create virtual environmentpython3 -m venv .venvsource .venv/bin/activate  # On Windows: .venv\Scripts\activate# Install dependenciespip install -r requirements.txt```### 2. Run Complete Pipeline```bash# Run the full pipeline: info → base test → train → lora test → comparepython main.py full```### 3. Individual Commands```bash# Show configuration and dataset infopython main.py info# Test base model performancepython main.py base-test# Train LoRA adapterpython main.py train# Test trained LoRA modelpython main.py lora-test# Compare base vs LoRA modelpython main.py compare# Interactive testing with custom emailspython main.py interactive```## 🎛️ Advanced Usage### Custom Training Parameters```bash# Train with custom settingspython main.py train --epochs 5 --learning-rate 1e-4 --batch-size 2```### Using Different Adapter Path```bash# Test specific adapterpython main.py lora-test --adapter-path /path/to/my/adapter# Compare with specific adapterpython main.py compare --adapter-path outputs/my_custom_adapter```## 📊 Pipeline Workflow### 1. **Information Phase** (`python main.py info`)- Show model and dataset configuration- Display dataset statistics and sample examples- Verify environment setup### 2. **Base Model Testing** (`python main.py base-test`)- Load Google Gemma-2B base model
+# LoRA Fine-tuning Pipeline for Email Intent Classification
+
+A clean, modular pipeline for fine-tuning Google's Gemma 2B model using LoRA (Low-Rank Adaptation) on email intent classification tasks.
+
+## 🏗️ Project Structure
+
+```
+├── configs/
+│   ├── __init__.py         # Configuration package
+│   └── config.py           # All configuration settings
+├── src/
+│   ├── __init__.py         # Package initialization
+│   ├── model_handler.py    # Model operations (load, LoRA, save)
+│   ├── data_handler.py     # Dataset operations (load, preprocess)
+│   ├── evaluator.py        # Evaluation and metrics
+│   ├── trainer.py          # LoRA training pipeline
+│   └── data_loader.py      # Legacy data loading utilities
+├── main.py                 # Single CLI entry point
+├── archive_testing/        # Archived test files
+├── outputs/               # Training outputs (ignored by git)
+├── requirements.txt       # Dependencies
+└── README.md             # This file
+```## 🚀 Quick Start### 1. Setup Environment```bash# Create virtual environmentpython3 -m venv .venvsource .venv/bin/activate  # On Windows: .venv\Scripts\activate# Install dependenciespip install -r requirements.txt```### 2. Run Complete Pipeline```bash# Run the full pipeline: info → base test → train → lora test → comparepython main.py full```### 3. Individual Commands```bash# Show configuration and dataset infopython main.py info# Test base model performancepython main.py base-test# Train LoRA adapterpython main.py train# Test trained LoRA modelpython main.py lora-test# Compare base vs LoRA modelpython main.py compare# Interactive testing with custom emailspython main.py interactive```## 🎛️ Advanced Usage### Custom Training Parameters```bash# Train with custom settingspython main.py train --epochs 5 --learning-rate 1e-4 --batch-size 2```### Using Different Adapter Path```bash# Test specific adapterpython main.py lora-test --adapter-path /path/to/my/adapter# Compare with specific adapterpython main.py compare --adapter-path outputs/my_custom_adapter```## 📊 Pipeline Workflow### 1. **Information Phase** (`python main.py info`)- Show model and dataset configuration- Display dataset statistics and sample examples- Verify environment setup### 2. **Base Model Testing** (`python main.py base-test`)- Load Google Gemma-2B base model
 - Test on predefined email examples
 - Establish baseline performance
 
@@ -25,7 +47,7 @@
 
 ## 🔧 Configuration
 
-All configuration is centralized in `src/config.py`:
+All configuration is centralized in `configs/config.py`:
 
 ### Model Configuration
 - Base model: `google/gemma-2b`

@@ -8,7 +8,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from peft import PeftModel, LoraConfig, get_peft_model, TaskType, prepare_model_for_kbit_training
 from typing import Tuple, Optional
 
-from .config import MODEL_CONFIG, LORA_CONFIG, TRAINING_CONFIG, GENERATION_CONFIG
+from configs import MODEL_CONFIG, LORA_CONFIG, TRAINING_CONFIG, GENERATION_CONFIG
 
 
 class ModelHandler:

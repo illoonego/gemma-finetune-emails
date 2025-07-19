@@ -6,7 +6,7 @@ from datasets import load_dataset
 from transformers import AutoTokenizer
 from typing import List, Dict, Any
 
-from .config import DATA_CONFIG, MODEL_CONFIG
+from configs import DATA_CONFIG, MODEL_CONFIG
 
 
 class DataHandler:

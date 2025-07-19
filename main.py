@@ -14,7 +14,7 @@ from src.model_handler import ModelHandler
 from src.data_handler import DataHandler
 from src.evaluator import Evaluator
 from src.trainer import LoRATrainer
-from src.config import MODEL_CONFIG, DATA_CONFIG, TRAINING_CONFIG
+from configs import MODEL_CONFIG, DATA_CONFIG, TRAINING_CONFIG
 
 
 class LoRAPipeline:

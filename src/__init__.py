@@ -1,7 +1,7 @@
 """
 LoRA Fine-tuning Pipeline Package
 """
-from .config import MODEL_CONFIG, DATA_CONFIG, LORA_CONFIG, TRAINING_CONFIG, GENERATION_CONFIG
+from configs import MODEL_CONFIG, DATA_CONFIG, LORA_CONFIG, TRAINING_CONFIG, GENERATION_CONFIG
 from .model_handler import ModelHandler
 from .data_handler import DataHandler
 from .evaluator import Evaluator
